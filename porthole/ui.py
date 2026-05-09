@@ -50,10 +50,6 @@ class PortholeUI:
             pass
         stdscr.keypad(True)
         stdscr.timeout(250)
-        if curses.has_colors():
-            curses.start_color()
-            curses.use_default_colors()
-            curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_CYAN)
 
         self.refresh_data("初次加载")
 
@@ -173,8 +169,10 @@ class PortholeUI:
         stdscr.refresh()
 
     def _render_list(self, stdscr: curses.window, top: int, left: int, height: int, width: int) -> None:
-        header = self._format_list_row("协议", "端口", "监听地址", "PID", "进程", width)
-        self._safe_addstr(stdscr, top, left, header, curses.A_BOLD)
+        content_left = left + 1
+        content_width = max(1, width - 1)
+        header = self._format_list_row("协议", "端口", "监听地址", "PID", "进程", content_width)
+        self._safe_addstr(stdscr, top, content_left, header, curses.A_BOLD)
 
         visible_rows = max(0, height - 1)
         start_index = 0
@@ -192,17 +190,13 @@ class PortholeUI:
                 record.host or record.endpoint,
                 str(record.pid),
                 record.command,
-                width,
+                content_width,
             )
-            attr = curses.A_REVERSE
-            if curses.has_colors():
-                attr = curses.color_pair(1) if record_index == self.selected_index else curses.A_NORMAL
-            elif record_index != self.selected_index:
-                attr = curses.A_NORMAL
-            self._safe_addstr(stdscr, top + 1 + row, left, text, attr)
+            attr = curses.A_REVERSE | curses.A_BOLD if record_index == self.selected_index else curses.A_NORMAL
+            self._safe_addstr(stdscr, top + 1 + row, content_left, text, attr)
 
         if not self.records:
-            self._safe_addstr(stdscr, top + 2, left, "没有可显示的监听记录。")
+            self._safe_addstr(stdscr, top + 2, content_left, "没有可显示的监听记录。")
 
     def _render_details(self, stdscr: curses.window, top: int, left: int, height: int, width: int) -> None:
         self._safe_addstr(stdscr, top, left, truncate("详情", width - 1), curses.A_BOLD)
