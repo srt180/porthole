@@ -12,7 +12,7 @@ usage() {
 Install the Porthole prebuilt binary from GitHub Releases.
 
 Usage:
-  install.sh [--version v0.1.0] [--bin-dir /path/to/bin] [--repo owner/name]
+  install.sh [--version v0.1.1] [--bin-dir /path/to/bin] [--repo owner/name]
 
 Options:
   --version  Release tag to install. Defaults to the latest release.
