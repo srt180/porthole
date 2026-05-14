@@ -40,16 +40,49 @@ jobs:
       - name: Run tests
         run: python -m unittest discover -s tests
 
-  build:
+  build-linux:
     needs: test
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-24.04
+          - runner: ubuntu-24.04
+            container: quay.io/pypa/manylinux2014_x86_64:latest
+            python_bin: /opt/python/cp311-cp311/bin/python
             asset_name: porthole-linux-x86_64.tar.gz
-          - os: ubuntu-24.04-arm
+          - runner: ubuntu-24.04-arm
+            container: quay.io/pypa/manylinux2014_aarch64:latest
+            python_bin: /opt/python/cp311-cp311/bin/python
             asset_name: porthole-linux-arm64.tar.gz
+    runs-on: ${{ matrix.runner }}
+    container: ${{ matrix.container }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          "${{ matrix.python_bin }}" -m pip install --upgrade pip
+          "${{ matrix.python_bin }}" -m pip install pyinstaller
+
+      - name: Build binary
+        run: "${{ matrix.python_bin }}" -m PyInstaller --clean --noconfirm --onefile --name porthole main.py
+
+      - name: Package archive
+        run: tar -czf "${{ matrix.asset_name }}" -C dist porthole
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: ${{ matrix.asset_name }}
+
+  build-macos:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
           - os: macos-15
             asset_name: porthole-darwin-arm64.tar.gz
           - os: macos-15-intel
@@ -80,7 +113,9 @@ jobs:
           path: ${{ matrix.asset_name }}
 
   release:
-    needs: build
+    needs:
+      - build-linux
+      - build-macos
     runs-on: ubuntu-latest
     steps:
       - name: Download build artifacts

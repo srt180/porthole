@@ -31,6 +31,8 @@ curl -fsSL https://raw.githubusercontent.com/srt180/porthole/main/scripts/instal
 - Linux `x86_64`
 - Linux `arm64`
 
+Linux 预编译二进制使用 `manylinux2014` 环境构建，目标兼容 `glibc >= 2.17` 的主流发行版。
+
 安装后确认 `~/.local/bin` 或你指定的目录已经在 `PATH` 中，然后执行：
 
 ```bash
@@ -50,6 +52,12 @@ porthole
 - 系统已安装 `lsof`
 - 首版优先支持 macOS，兼容支持 `lsof` 的 Linux 环境
 
+说明：
+
+- 预编译二进制不需要本机安装 Python
+- Linux 版本不是完全静态链接，仍依赖目标系统提供 `glibc`
+- 当前程序运行时仍需要系统里有 `lsof`
+
 ## 启动
 
 ```bash
@@ -62,7 +70,7 @@ python3 main.py
 
 - 校验 tag 版本与 `pyproject.toml` 中的版本一致
 - 运行测试
-- 构建各平台单文件二进制
+- 在 `manylinux2014` / macOS 环境中构建各平台单文件二进制
 - 创建 GitHub Release 并上传构建产物
 
 示例：
