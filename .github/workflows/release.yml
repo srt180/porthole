@@ -1,0 +1,103 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verify tag matches project version
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import tomllib
+          import os
+
+          version = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+          tag = os.environ["GITHUB_REF_NAME"]
+          expected = f"v{version}"
+          if tag != expected:
+              raise SystemExit(f"Tag {tag!r} does not match project version {expected!r}.")
+          print(f"Verified release tag {tag} matches project version {version}.")
+          PY
+
+      - name: Run tests
+        run: python -m unittest discover -s tests
+
+  build:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            asset_name: porthole-linux-x86_64.tar.gz
+          - os: ubuntu-24.04-arm
+            asset_name: porthole-linux-arm64.tar.gz
+          - os: macos-15
+            asset_name: porthole-darwin-arm64.tar.gz
+          - os: macos-15-intel
+            asset_name: porthole-darwin-x86_64.tar.gz
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build dependencies
+        run: python -m pip install --upgrade pip pyinstaller
+
+      - name: Build binary
+        run: pyinstaller --clean --noconfirm --onefile --name porthole main.py
+
+      - name: Package archive
+        run: tar -czf "${{ matrix.asset_name }}" -C dist porthole
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: ${{ matrix.asset_name }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: Prepare release asset directory
+        run: |
+          mkdir -p upload
+          find release-assets -type f -name '*.tar.gz' -exec cp {} upload/ \;
+          sha256sum upload/*.tar.gz > upload/sha256sums.txt
+
+      - name: Create GitHub release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" upload/* \
+            --title "${{ github.ref_name }}" \
+            --generate-notes

@@ -2,6 +2,41 @@
 
 一个在终端里查看本机监听 TCP / UDP 端口的 TUI 小工具。
 
+## 安装
+
+### 安装预编译二进制
+
+默认安装最新 release 到 `~/.local/bin`：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/srt180/porthole/main/scripts/install.sh | bash
+```
+
+安装指定版本：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/srt180/porthole/main/scripts/install.sh | bash -s -- --version v0.1.0
+```
+
+自定义安装目录：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/srt180/porthole/main/scripts/install.sh | bash -s -- --bin-dir /usr/local/bin
+```
+
+脚本会自动识别当前平台，并从 GitHub Releases 下载对应的二进制文件安装到目标目录。当前提供：
+
+- macOS `arm64`
+- macOS `x86_64`
+- Linux `x86_64`
+- Linux `arm64`
+
+安装后确认 `~/.local/bin` 或你指定的目录已经在 `PATH` 中，然后执行：
+
+```bash
+porthole
+```
+
 ## 当前能力
 
 - 查看本机 TCP / UDP 监听列表
@@ -19,6 +54,22 @@
 
 ```bash
 python3 main.py
+```
+
+## 发布
+
+推送形如 `v0.1.0` 的 tag 后，GitHub Actions 会自动：
+
+- 校验 tag 版本与 `pyproject.toml` 中的版本一致
+- 运行测试
+- 构建各平台单文件二进制
+- 创建 GitHub Release 并上传构建产物
+
+示例：
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
 ```
 
 ## 快捷键
