@@ -15,7 +15,7 @@ curl -fsSL https://raw.githubusercontent.com/srt180/porthole/main/scripts/instal
 安装指定版本：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/srt180/porthole/main/scripts/install.sh | bash -s -- --version v0.1.2
+curl -fsSL https://raw.githubusercontent.com/srt180/porthole/main/scripts/install.sh | bash -s -- --version v0.1.3
 ```
 
 自定义安装目录：
@@ -66,7 +66,7 @@ python3 main.py
 
 ## 发布
 
-推送形如 `v0.1.2` 的 tag 后，GitHub Actions 会自动：
+推送形如 `v0.1.3` 的 tag 后，GitHub Actions 会自动：
 
 - 校验 tag 版本与 `pyproject.toml` 中的版本一致
 - 运行测试
@@ -76,8 +76,8 @@ python3 main.py
 示例：
 
 ```bash
-git tag v0.1.2
-git push origin v0.1.2
+git tag v0.1.3
+git push origin v0.1.3
 ```
 
 ## 快捷键
